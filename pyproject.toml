@@ -1,0 +1,30 @@
+[project]
+name = "enext_exchange_py"
+version = "0.1.0"
+description = "Wrapper for Euronext API"
+requires-python = ">=3.14"
+dependencies = [
+    "httpx>=0.28.1",
+    "pycryptodome>=3.23.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+    "ruff>=0.15.2",
+    "ty>=0.0.18",
+]
+
+[pytest]
+minversion = "9.0"
+addopts = ["-ra", "-q"]
+testpaths = [
+    "tests",
+]
+
+[tool.ruff]
+exclude = ["__init__.py"]
+line-length = 100
+
+[tool.ruff.lint]
+extend-select = ["I"]

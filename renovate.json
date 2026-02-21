@@ -1,0 +1,18 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:best-practices", "mergeConfidence:all-badges"],
+  "semanticCommits": "enabled",
+  "automergeStrategy": "auto",
+  "platformAutomerge": false,
+
+  "lockFileMaintenance": {
+		"enabled": true,
+		"automerge": true
+  },
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "automerge": true
+    }
+  ]
+}
