@@ -1,14 +1,16 @@
 import base64
+import datetime
 import hashlib
 import json
-from typing import Final
+from parsel import Selector
+from typing import Final, Any, Generator, AsyncGenerator, Coroutine
 
 import httpx
 from httpx import URL
 from Crypto.Cipher import AES
 
-from enext_exchange_py.models import EncryptedResponse
-from enext_exchange_py.models.enums import DownloadFormat, DateFormat, DecimalSeparator
+from enext_exchange_py.models import EncryptedResponse, DetailedQuote, Quote
+from enext_exchange_py.mappers import map_page_to_detailed_quote, map_page_to_factsheet
 
 __all__ = ["ExchangeClient"]
 
@@ -28,7 +30,7 @@ class ExchangeClient:
         self,
         base_url: URL | str = DEFAULT_BASE_URL,
         headers: dict | None = None,
-        secret: str | bytes = DEFAULT_SECRET,\
+        secret: str | bytes = DEFAULT_SECRET,
         language: str = "en",
         *args,
         **kwargs,
@@ -54,9 +56,9 @@ class ExchangeClient:
         self._language = language
 
     @staticmethod
-    def _obtain_key(password: bytes, salt: bytes, key_len: int, iv_len: int):
+    def _obtain_key(password: bytes, salt: bytes, key_len: int, iv_len: int) -> tuple[bytes, bytes]:
         """
-        Derives key and IV from password and salt
+        Derives key and IV from password and salt. Uses PBKDF2 with md5 as a hash function.
         """
         dtot = b""
         d = b""
@@ -64,7 +66,7 @@ class ExchangeClient:
             # Hash current digest + password + salt
             d = hashlib.md5(d + password + salt).digest()
             dtot += d
-        return dtot[:key_len], dtot[key_len:key_len + iv_len]
+        return dtot[:key_len], dtot[key_len : key_len + iv_len]
 
     @staticmethod
     def _decrypt_data(resp: EncryptedResponse, secret: bytes) -> dict | list:
@@ -85,22 +87,45 @@ class ExchangeClient:
 
         return json.loads(decrypted)
 
-    def get_detailed_quote(self, symbol: str):
+    async def get_detailed_quote(self, symbol: str) -> DetailedQuote:
         path = f"/{self._language}/ajax/getDetailedQuote/{symbol}"
-        raise NotImplementedError
 
-    def get_intraday_quotes(self, symbol: str):
+        resp = await self._client.get(path)
+        page = Selector(resp.text)
+
+        data = map_page_to_detailed_quote(page)
+        return data
+
+    @staticmethod
+    def _parse_quotes_list(quotes_list: list[dict[str, Any]]) -> Generator[Quote, None, None]:
+        for item in quotes_list:
+            date_str = item.pop("time")
+            item["time"] = datetime.datetime.strptime(date_str, "%Y-%m-%d %H:%M")
+            yield Quote(**item)
+
+    async def get_intraday_quotes(self, symbol: str) -> Generator[Quote, None, None]:
         path = f"/intraday_chart/getChartData/{symbol}/intraday"
-        raise NotImplementedError
 
-    def get_historical_quotes(self, symbol: str):
+        resp = await self._client.get(path)
+        enc_data = EncryptedResponse(**resp.json())
+        data = self._decrypt_data(enc_data, self._secret)
+
+        return self._parse_quotes_list(data)
+
+    async def get_historical_quotes(self, symbol: str) -> Generator[Quote, None]:
         path = f"/intraday_chart/getChartData/{symbol}/max"
-        raise NotImplementedError
 
-    def get_performance_book(self, symbol: str):
-        path = f"/{self._language}/ajax/getPerformancesBook/{symbol}"
-        raise NotImplementedError
+        resp = await self._client.get(path)
+        enc_data = EncryptedResponse(**resp.json())
+        data = self._decrypt_data(enc_data, self._secret)
 
-    def get_factsheets(self, symbol: str):
+        return self._parse_quotes_list(data)
+
+    async def get_factsheet(self, symbol: str):
         path = f"/{self._language}/ajax/getDetailedQuoteFactsheets/{symbol}"
-        raise NotImplementedError
+
+        resp = await self._client.get(path)
+        page = Selector(resp.text)
+
+        data = map_page_to_factsheet(page)
+        return data
