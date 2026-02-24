@@ -1,6 +1,6 @@
 [project]
 name = "enext_exchange_py"
-version = "0.1.1"
+version = "0.1.2"
 description = "Provides access to real-time and historical financial data from various exchanges"
 readme = "README.md"
 requires-python = ">=3.14"
