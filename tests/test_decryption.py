@@ -1,6 +1,8 @@
 import httpx
-from enext_exchange_py.client import ExchangeClient, DEFAULT_SECRET
+
+from enext_exchange_py.client import DEFAULT_SECRET, ExchangeClient
 from enext_exchange_py.models import EncryptedResponse
+
 
 def test__decrypt_data():
     url = "https://live.euronext.com/en/intraday_chart/getChartData/IE00BP3QZB59-ETFP/intraday"

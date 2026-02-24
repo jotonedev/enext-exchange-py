@@ -2,15 +2,15 @@ import base64
 import datetime
 import hashlib
 import json
-from parsel import Selector
-from typing import Final, Any, Generator, AsyncGenerator, Coroutine
+from typing import Any, AsyncGenerator, Final, Generator
 
 import httpx
-from httpx import URL
 from Crypto.Cipher import AES
+from httpx import URL
+from parsel import Selector
 
-from enext_exchange_py.models import EncryptedResponse, DetailedQuote, Quote
 from enext_exchange_py.mappers import map_page_to_detailed_quote, map_page_to_factsheet
+from enext_exchange_py.models import DetailedQuote, EncryptedResponse, Factsheet, Quote
 
 __all__ = ["ExchangeClient"]
 
@@ -69,7 +69,7 @@ class ExchangeClient:
         return dtot[:key_len], dtot[key_len : key_len + iv_len]
 
     @staticmethod
-    def _decrypt_data(resp: EncryptedResponse, secret: bytes) -> dict | list:
+    def _decrypt_data(resp: EncryptedResponse, secret: bytes) -> Any:
         salt = bytes.fromhex(resp.s)
         ct = base64.b64decode(resp.ct)
 
@@ -103,25 +103,27 @@ class ExchangeClient:
             item["time"] = datetime.datetime.strptime(date_str, "%Y-%m-%d %H:%M")
             yield Quote(**item)
 
-    async def get_intraday_quotes(self, symbol: str) -> Generator[Quote, None, None]:
+    async def get_intraday_quotes(self, symbol: str) -> AsyncGenerator[Quote, None]:
         path = f"/intraday_chart/getChartData/{symbol}/intraday"
 
         resp = await self._client.get(path)
         enc_data = EncryptedResponse(**resp.json())
         data = self._decrypt_data(enc_data, self._secret)
 
-        return self._parse_quotes_list(data)
+        for value in self._parse_quotes_list(data):
+            yield value
 
-    async def get_historical_quotes(self, symbol: str) -> Generator[Quote, None]:
+    async def get_historical_quotes(self, symbol: str) -> AsyncGenerator[Quote, None]:
         path = f"/intraday_chart/getChartData/{symbol}/max"
 
         resp = await self._client.get(path)
         enc_data = EncryptedResponse(**resp.json())
         data = self._decrypt_data(enc_data, self._secret)
 
-        return self._parse_quotes_list(data)
+        for value in self._parse_quotes_list(data):
+            yield value
 
-    async def get_factsheet(self, symbol: str):
+    async def get_factsheet(self, symbol: str) -> Factsheet:
         path = f"/{self._language}/ajax/getDetailedQuoteFactsheets/{symbol}"
 
         resp = await self._client.get(path)

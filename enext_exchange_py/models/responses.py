@@ -1,12 +1,8 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-__all__ = [
-    "DetailedQuote",
-    "Quote",
-    "EncryptedResponse",
-    "Price"
-]
+__all__ = ["DetailedQuote", "Quote", "EncryptedResponse", "Price", "Factsheet"]
+
 
 @dataclass(frozen=True)
 class EncryptedResponse:
@@ -14,10 +10,12 @@ class EncryptedResponse:
     s: str
     iv: str
 
+
 @dataclass(frozen=True)
 class Price:
     value: float
-    currency: str
+    currency: str | None = None
+
 
 @dataclass(frozen=True)
 class DetailedQuote:
@@ -27,11 +25,25 @@ class DetailedQuote:
     last_traded_time: datetime | None = None
     since_open_percentage: float | None = None
     since_previous_close_percentage: float | None = None
-    valuation_close_price: Price | None = None
-    valuation_close_time: datetime | None = None
+
 
 @dataclass(frozen=True)
 class Quote:
     time: datetime
-    price: Price
+    price: float
     volume: int
+
+
+@dataclass(frozen=True)
+class Factsheet:
+    isin: str | None = None
+    code: str | None = None
+    instrument_type: str | None = None
+    instrument_sub_type: str | None = None
+    segment: str | None = None
+    trading_mode: str | None = None
+    trading_group: str | None = None
+    trading_currency: str | None = None
+    quantity_notation: str | None = None
+    shares_outstanding: int | None = None
+    tick_size: str | None = None
