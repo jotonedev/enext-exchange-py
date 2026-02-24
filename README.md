@@ -8,7 +8,6 @@ Provides access to real-time and historical financial data from various exchange
 - **Intraday Quotes**: Fetch intraday price and volume data.
 - **Historical Quotes**: Access historical price and volume data.
 - **Factsheets**: Retrieve instrument information such as ISIN, code, instrument type, and trading details.
-- **Asynchronous**: Built on `httpx`
 
 ## Installation
 
@@ -28,24 +27,20 @@ from enext_exchange_py import ExchangeClient
 
 async def main():
     async with ExchangeClient() as client:
-        # 1. Get a detailed quote for a symbol (e.g., Lyxor MSCI World ETF)
+        # 1. Get a detailed quote for a ISIN
         symbol = "LU0290358497-ETFP"
         quote = await client.get_detailed_quote(symbol)
         print(f"Name: {quote.name}")
-        print(f"Last Price: {quote.last_traded_price.value} {quote.last_traded_price.currency}")
-        print(f"Change: {quote.since_previous_close_percentage}%")
 
         # 2. Get intraday quotes
-        print("\nIntraday Quotes (first 5):")
+        print("\nIntraday Quotes")
         async for q in client.get_intraday_quotes(symbol):
             print(f"{q.time}: {q.price} (Vol: {q.volume})")
-            # Limit for demonstration
-            break 
+            break  # remove to list them all
 
         # 3. Get a factsheet
         factsheet = await client.get_factsheet(symbol)
         print(f"\nISIN: {factsheet.isin}")
-        print(f"Instrument Type: {factsheet.instrument_type}")
         print(f"Trading Currency: {factsheet.trading_currency}")
 
 if __name__ == "__main__":
@@ -74,4 +69,6 @@ uv run pytest
 
 ## License
 
-This project is licensed under the terms of the license included in the repository.
+This project is licensed under the MIT License.
+
+All data retrieved through this project remains the exclusive property of the respective data providers. Use of this software does not grant any ownership rights or licenses to the underlying data; users are responsible for complying with the providers' specific Terms of Service.
