@@ -1,7 +1,8 @@
 [project]
 name = "enext_exchange_py"
 version = "0.1.1"
-description = "Wrapper for Euronext API"
+description = "Provides access to real-time and historical financial data from various exchanges"
+readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "httpx>=0.28.1",
