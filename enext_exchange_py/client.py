@@ -55,6 +55,15 @@ class ExchangeClient:
             self._secret = secret.encode()
         self._language = language
 
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self._client.aclose()
+
+    async def close(self):
+        await self._client.aclose()
+
     @staticmethod
     def _obtain_key(password: bytes, salt: bytes, key_len: int, iv_len: int) -> tuple[bytes, bytes]:
         """

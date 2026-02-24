@@ -1,6 +1,6 @@
 [project]
 name = "enext_exchange_py"
-version = "0.1.0"
+version = "0.1.1"
 description = "Wrapper for Euronext API"
 requires-python = ">=3.14"
 dependencies = [
